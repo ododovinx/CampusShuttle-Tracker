@@ -3,25 +3,44 @@ import { View, StyleSheet, Text } from 'react-native';
 import { TextInput, Button, SegmentedButtons, ActivityIndicator } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 
-export default function RegisterScreen() {
-  const { register, isLoading } = useAuth();
-  const [role, setRole] = useState('student');
-  const [name, setName] = useState('Chimamanda Nnaji');
-  const [email, setEmail] = useState('newuser@campus.edu.ng');
-  const [password, setPassword] = useState('password123');
+const demoAccounts = {
+  student: { email: 'student@campus.edu.ng', password: 'password123' },
+  driver: { email: 'driver@campus.edu.ng', password: 'password123' },
+  admin: { email: 'admin@campus.edu.ng', password: 'password123' },
+};
 
-  const handleRegister = async () => {
-    await register({ name, email, password, role });
+export default function LoginScreen() {
+  const { login, isLoading } = useAuth();
+  const [role, setRole] = useState('student');
+  const [email, setEmail] = useState(demoAccounts.student.email);
+  const [password, setPassword] = useState(demoAccounts.student.password);
+  const [error, setError] = useState('');
+
+  const handleRoleChange = (nextRole) => {
+    setRole(nextRole);
+    setEmail(demoAccounts[nextRole].email);
+    setPassword(demoAccounts[nextRole].password);
+    setError('');
+  };
+
+  const handleLogin = async () => {
+    setError('');
+    try {
+      await login({ email, password, role });
+    } catch (loginError) {
+      setError('Unable to sign in. Please check your credentials.');
+      console.warn(loginError);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Create account</Text>
-      <Text style={styles.subtitle}>Join the CampusShuttle community</Text>
+      <Text style={styles.title}>Welcome back</Text>
+      <Text style={styles.subtitle}>Sign in to continue to your dashboard</Text>
 
       <SegmentedButtons
         value={role}
-        onValueChange={setRole}
+        onValueChange={handleRoleChange}
         buttons={[
           { value: 'student', label: 'Student' },
           { value: 'driver', label: 'Driver' },
@@ -30,7 +49,6 @@ export default function RegisterScreen() {
         style={styles.segmentedButtons}
       />
 
-      <TextInput label="Full name" value={name} onChangeText={setName} style={styles.input} />
       <TextInput
         label="Email"
         value={email}
@@ -39,6 +57,7 @@ export default function RegisterScreen() {
         autoCapitalize="none"
         style={styles.input}
       />
+
       <TextInput
         label="Password"
         value={password}
@@ -47,8 +66,10 @@ export default function RegisterScreen() {
         style={styles.input}
       />
 
-      <Button mode="contained" onPress={handleRegister} loading={isLoading} disabled={isLoading} style={styles.button}>
-        {isLoading ? 'Creating account...' : 'Register'}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+      <Button mode="contained" onPress={handleLogin} style={styles.button} loading={isLoading} disabled={isLoading}>
+        {isLoading ? 'Signing in...' : 'Login'}
       </Button>
 
       {isLoading ? <ActivityIndicator style={styles.loader} color="#0A7D5A" /> : null}
@@ -85,6 +106,10 @@ const styles = StyleSheet.create({
     marginTop: 14,
     borderRadius: 12,
     backgroundColor: '#0A7D5A',
+  },
+  errorText: {
+    color: '#D95454',
+    marginBottom: 10,
   },
   loader: {
     marginTop: 12,
